@@ -1,6 +1,6 @@
 # tabula-rasa-preset
 
-> **The ultimate YOLO presets.** No, not even bash is included. Start from nothing and build-a-harness with your DeepSeek Harness. Invent and reinvent everything.
+> **The ultimate YOLO presets.** 
 
 Two out-of-tree [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) agent presets. Both hold `tool-cordis` — the self-referential Cordis toolset (`cordis_inspect_*`, `cordis_define`, `cordis_run`, `cordis_stop`, `cordis_undefine`) — and nothing that gives the agent a capability. No shell, no filesystem tools, no editor. Whatever the agent needs, it designs and registers itself as dynamic Cordis packages, implemented over the host services the sandbox facade exposes (`ctx.fs`, `ctx.web`, `ctx.bash`, Cordis timers).
 
