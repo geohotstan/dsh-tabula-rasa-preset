@@ -1,0 +1,23 @@
+# The `void` agent preset: purely nothing except tool-cordis.
+#
+# The persona row exists only to erase: empty text drops the persona section
+# at render, and `complete: true` suppresses every other section — the system
+# prompt is literally empty. The model sees nothing but the cordis tool
+# schemas. There is no identity, no guidance, no support, and no tools: what
+# the agent becomes, it writes itself, starting from the toolset alone.
+#
+# Requires a host composition mounting @deepseek-ai/dsh-cordis-host-runner
+# (the web profile does); without it the toolset never activates.
+#
+# TRUST: cordis_define/cordis_run evaluate model-written JavaScript against
+# the live runtime. Treat a session on this preset as shell access.
+
+- id: erasure
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: ''
+    complete: true
+    includeRuntimeContext: false
+
+- id: tool-cordis
+  name: '@deepseek-ai/dsh-tool-cordis'

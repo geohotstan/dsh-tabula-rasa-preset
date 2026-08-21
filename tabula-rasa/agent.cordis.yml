@@ -1,0 +1,69 @@
+# The `tabula-rasa` agent preset: a barebones self-composing agent, supported.
+#
+# It starts with nothing but the ability to read its runtime and write new
+# plugins into it. Every capability — shell, filesystem, editor, web — the
+# agent must design and register itself, as dynamic Cordis packages over the
+# host services the sandbox facade exposes. What IS included is the support
+# machinery: identity, workspace instructions, and context compaction. No
+# model-visible tools exist here except the cordis toolset.
+#
+# The persona is not `complete`, so supporting sections the host and the
+# agent-instructions row contribute still render beside it.
+#
+# Requires a host composition mounting @deepseek-ai/dsh-cordis-host-runner
+# (the web profile does); without it the toolset never activates.
+#
+# TRUST: cordis_define/cordis_run evaluate model-written JavaScript against
+# the live runtime. Treat a session on this preset as shell access.
+
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    includeRuntimeContext: false
+    text: |-
+      You begin as a blank slate, working in {{cwd}}. You hold no tools and no capabilities — only one faculty: you can read the runtime you run on, and you can write new plugins into it. Everything else, you invent.
+
+      Whatever you can inspect, you can change. A plugin you write goes live the moment you run it: it can register tools you then call, add or replace parts of your own prompt, provide services, and listen to the events of this process. Build what the task needs, keep it while it serves, retire it when it does not. Inspect before you build — the runtime tells the truth; names do not.
+
+      What you invent lives only in this process and dies with it. To make a change that outlives you, author a preset — a directory holding one agent.cordis.yml under ${DSH_HOME:-$HOME/.dsh}/.agent-presets/<id>/ — and every session created on it is born as what you designed. These very instructions are one row in such a file; reinvent them freely. Never write inside the deployment's own agent-presets directory; an upgrade overwrites it.
+
+# Workspace instruction files (AGENTS.md, CLAUDE.md, ...) as prompt sections —
+# supporting knowledge, no tools. Invisible under a `complete` persona, which
+# is why the persona above is not one.
+- id: agent-instructions
+  name: '@deepseek-ai/dsh-agent-instructions'
+  config:
+    maxBytes: 65536
+
+# ── compaction ──────────────────────────────────────────────────────────────
+#
+# The survival kit: fold the conversation when it outgrows the window, and
+# prune stale tool results. Nothing here is model-visible as a tool.
+# `compaction-basic` reads `toolResultPrune` through `ctx.get`, so the pruner
+# must share this realm rather than sit outside it.
+- id: compaction
+  name: cordis:group
+  group: true
+  isolate:
+    compaction: true
+    toolResultPruner: true
+  config:
+    - id: compaction-basic
+      name: '@deepseek-ai/dsh-compaction-basic'
+
+    - id: command-compact
+      name: '@deepseek-ai/dsh-command-compact'
+
+    - id: tool-result-pruner
+      name: '@deepseek-ai/dsh-compaction-tool-result-pruner'
+      config:
+        thresholdChars: 8192
+        headChars: 4096
+        tailChars: 1024
+
+# ── self-modification ───────────────────────────────────────────────────────
+#
+# Read the live runtime, define a package, run it, stop it. The toolset is a
+# trust boundary, not a sandbox — see this file's header.
+- id: tool-cordis
+  name: '@deepseek-ai/dsh-tool-cordis'
